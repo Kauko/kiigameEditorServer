@@ -1,5 +1,5 @@
 #Files created by Linux
-*.~
+*.*~
 *.orig
 
 #Static files
