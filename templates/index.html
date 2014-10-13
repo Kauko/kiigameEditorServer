@@ -1,0 +1,8 @@
+<!doctype html>
+<title>kiigame Server</title>
+  <h1>Select a game from below</h1>
+<ul>
+{% for game_name in games %}
+    <li><a href="{{ games[game_name] }}">{{ game_name }}</a></li>
+{% endfor %}
+</ul>
