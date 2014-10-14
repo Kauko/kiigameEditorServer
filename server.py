@@ -56,6 +56,10 @@ def allowed_file(filename):
         filename.rsplit('.', 1)[1] in ALLOWED_EXTENSIONS
 
 
+# NOTE: Uploading files overwrites existing files, but
+# files are never removed. Pretty sure there's no need to
+# remove any files ever, but this is just something one should
+# keep in mind
 @app.route('/upload', methods=['POST'])
 def upload_game():
         if request.method == 'POST':
@@ -117,12 +121,12 @@ def get_game_files(game_name, filename):
     # game_name is a single string, like "latkazombit"
     # filename is a single filename, like "kiigame.html",
     # or it may be a file in a subfolder, like "Kinetic/kinetic.js"
-    if VERBOSE:
+    if VERBOSE and False:
         print(" **** ")
         print("#1 game_name: " + game_name + ", filename: " + filename)
     # filename may contain a subfolder, so we need to split it
     full_path = filename.split('/')
-    if VERBOSE:
+    if VERBOSE and False:
         print('#2 full_path: ' + str(full_path))
     url = (app.config['UPLOAD_FOLDER'] + '/gamedata/' +
            game_name + '/' + '/'.join(full_path[:-1]))
@@ -131,7 +135,7 @@ def get_game_files(game_name, filename):
     # If it contained a subfolder, like Kinetic/kinetic.js,
     # the url will be:
     # <UPLOAD_FOLDER>/gamedata/<game_name>/Kinetic/
-    if VERBOSE:
+    if VERBOSE and False:
         print('#3 url: ' + url)
         print("#4 Returning file: " + str(full_path[-1:][0]))
     # str(full_path[-1:][0]) always points to the filename
