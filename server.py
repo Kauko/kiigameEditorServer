@@ -13,8 +13,8 @@ ART_FOLDER = '/art'
 # due to security concerns. The uploaded .html files are very basic,
 # so we can just create it programmatically
 ALLOWED_EXTENSIONS = set(
-    ['js', 'md', 'json', 'mp3',
-        'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'html'])
+    ['md', 'json', 'mp3', 'ogg'
+        'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif'])
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -77,16 +77,23 @@ def upload_game():
             # { path/to/file.foo : File }
             for full_path in request.files:
                 file = request.files[full_path]
-                if file and allowed_file(file.filename):
-                    # secure_filename makes sure there's no shenanigans
-                    # like ../../../my_credit_card_number
-                    filename = secure_filename(file.filename)
-                    # Get the directory path by removing the filename from
-                    # the full_path
-                    folder = full_path.replace(filename, '')
-                    # Combine it with the upload folder path
-                    upload_folder = os.path.join(
-                        app.config['UPLOAD_FOLDER'], folder)
+
+                # secure_filename makes sure there's no shenanigans
+                # like ../../../my_credit_card_number
+                filename = secure_filename(file.filename)
+                # Get the directory path by removing the filename from
+                # the full_path
+                folder = full_path.replace(filename, '')
+                # Combine it with the upload folder path
+                upload_folder = os.path.join(
+                    app.config['UPLOAD_FOLDER'], folder)
+
+                if file.filename[-4:] == "html":
+                    # If the folder did not exist, we know that
+                    # we have to create the game.html too
+                    create_game_html(upload_folder,
+                                     upload_folder.split('/')[-2:][0])
+                elif file and allowed_file(file.filename):
                     # Create the target directories if they don't exist
                     if not os.path.exists(upload_folder):
                         if VERBOSE:
@@ -94,11 +101,9 @@ def upload_game():
                         os.makedirs(upload_folder)
                     # File will be saved to this path
                     final_path = os.path.join(upload_folder, filename)
-                    if VERBOSE:
-                        print("Server :: SAVING file to " + final_path)
                     file.save(final_path)
                     if VERBOSE:
-                        print('Server :: Saved file to ' + final_path)
+                        print('Server :: SAVED file to ' + final_path)
                     success = True
                 else:
                     if VERBOSE:
@@ -115,6 +120,15 @@ def upload_game():
                 abort(503)
 
         return
+
+
+def create_game_html(path, gamename):
+    rendered = render_template('game.html', game_name=gamename)
+    if VERBOSE:
+        print("Server :: Creating game.html of " + gamename +
+              " to: " + path + "game.html")
+    with open(path+"game.html", "wb") as f:
+        f.write(bytes(rendered, 'UTF-8'))
 
 
 # This route is not only used for accessing the games,
