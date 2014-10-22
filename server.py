@@ -78,22 +78,16 @@ def upload_game():
             for full_path in request.files:
                 file = request.files[full_path]
 
-                # secure_filename makes sure there's no shenanigans
-                # like ../../../my_credit_card_number
-                filename = secure_filename(file.filename)
-                # Get the directory path by removing the filename from
-                # the full_path
-                folder = full_path.replace(filename, '')
-                # Combine it with the upload folder path
-                upload_folder = os.path.join(
-                    app.config['UPLOAD_FOLDER'], folder)
-
-                if file.filename[-4:] == "html":
-                    # If the folder did not exist, we know that
-                    # we have to create the game.html too
-                    create_game_html(upload_folder,
-                                     upload_folder.split('/')[-2:][0])
-                elif file and allowed_file(file.filename):
+                if file and allowed_file(file.filename):
+                    # secure_filename makes sure there's no shenanigans
+                    # like ../../../my_credit_card_number
+                    filename = secure_filename(file.filename)
+                    # Get the directory path by removing the filename from
+                    # the full_path
+                    folder = full_path.replace(filename, '')
+                    # Combine it with the upload folder path
+                    upload_folder = os.path.join(
+                        app.config['UPLOAD_FOLDER'], folder)
                     # Create the target directories if they don't exist
                     if not os.path.exists(upload_folder):
                         if VERBOSE:
@@ -112,6 +106,17 @@ def upload_game():
                               file.filename)
                     fails['failed_uploads'].append(full_path)
 
+            # Finally when all files are added, create the game.html
+            # from a template using this function
+            # "root" is something like gamedata/<game_name>,
+            # send the whole path AND just the name of
+            # the game (the last folder) as a parameter
+            create_game_html(
+                os.path.join(
+                    app.config['UPLOAD_FOLDER'],
+                    request.args.get('root', '')),
+                request.args.get('root', '').split('/')[-1:][0])
+
             if success and len(fails['failed_uploads']) == 0:
                 return 'Uploaded the game'
             elif success:
@@ -122,12 +127,17 @@ def upload_game():
         return
 
 
+# Create the main html file of the game from a template
+# path is received from the client, it's something like
+# gamedata/<game>
+# gamename is extracted in upload_game(), it's the last folder
+# of the path
 def create_game_html(path, gamename):
     rendered = render_template('game.html', game_name=gamename)
     if VERBOSE:
         print("Server :: Creating game.html of " + gamename +
-              " to: " + path + "game.html")
-    with open(path+"game.html", "wb") as f:
+              " to: " + path + "/game.html")
+    with open(path+"/game.html", "wb") as f:
         f.write(bytes(rendered, 'UTF-8'))
 
 
